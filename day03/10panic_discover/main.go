@@ -11,7 +11,7 @@ func funcA() {
 func funcB() {
 	// 刚刚打开的连接
 	defer func() {
-		err := recover()
+		err := recover() // recover必须搭配defer语句使用，recover()在defer里面
 		fmt.Println(err)
 		fmt.Println("释放数据库连接")
 	}()
