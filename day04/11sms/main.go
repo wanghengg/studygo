@@ -64,6 +64,7 @@ func main() {
 		1. 查看学生
 		2. 新增学生
 		3. 删除学生
+		4. 退出
 	`)
 	for {
 		fmt.Print("请输入你要干什么：")
@@ -82,7 +83,7 @@ func main() {
 		case 4:
 			os.Exit(1) // 退出
 		default:
-			fmt.Println("error")
+			fmt.Println("输入错误，请重新输入！")
 		}
 	}
 }
