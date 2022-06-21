@@ -33,4 +33,5 @@ func main() {
 		feet: 12,
 	}
 	d.wang()
+	d.move()
 }
