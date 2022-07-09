@@ -44,6 +44,15 @@ func NewFileLogger(levelStr, fp, fn string, maxSize int64) (*FileLogger, error) 
 	}, nil
 }
 
+func (f *FileLogger) checkSize(file *os.File) bool {
+	fileInfo, err := file.Stat()
+	if err != nil {
+		fmt.Printf("get file info failed, err:%v\n", err)
+		return false
+	}
+	return fileInfo.Size() >= f.maxFileSize
+}
+
 func (l *FileLogger) log(msg string, lv LogLevel) {
 	if lv >= l.level {
 		now := time.Now().Format("2006-01-02 15:04:05")
@@ -63,8 +72,44 @@ func (l *FileLogger) log(msg string, lv LogLevel) {
 		case FATAL:
 			levelStr = "FATAL"
 		}
+		if l.checkSize(l.fileObj) {
+			// 需要切割日志文件
+			// 1. 关闭当前的日志文件
+			l.fileObj.Close()
+			// 2. 备份一下 rename
+			nowStr := time.Now().Format("20060102150405000")
+			logName := path.Join(l.filePath, l.fileName)           // 当前日志文件的完整路径
+			newLogName := fmt.Sprintf("%s.bak%s", logName, nowStr) // 拼接一个日志文件备份的名字
+			os.Rename(logName, newLogName)
+			// 3. 打开新的文件
+			fileObj, err := os.OpenFile(logName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Printf("open new log file failed, err:%v\n", err)
+				return
+			}
+			// 4. 将打开的新的文件对象赋值给l.fileObj
+			l.fileObj = fileObj
+		}
 		fmt.Fprintf(l.fileObj, "[%s] [%s] [%s:%s:%d] %s\n", now, levelStr, fileName, funcName, fileNo, msg)
 		if lv >= ERROR {
+			if l.checkSize(l.errFileObj) {
+				// 需要切割日志文件
+				// 1. 关闭当前的日志文件
+				l.errFileObj.Close()
+				// 2. 备份一下 rename
+				nowStr := time.Now().Format("20060102150405000")
+				logName := path.Join(l.filePath, l.fileName) + ".err"  // 当前日志文件的完整路径
+				newLogName := fmt.Sprintf("%s.bak%s", logName, nowStr) // 拼接一个日志文件备份的名字
+				os.Rename(logName, newLogName)
+				// 3. 打开新的文件
+				errFileObj, err := os.OpenFile(logName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+				if err != nil {
+					fmt.Printf("open new log file failed, err:%v\n", err)
+					return
+				}
+				// 4. 将打开的新的文件对象赋值给l.fileObj
+				l.errFileObj = errFileObj
+			}
 			fmt.Fprintf(l.errFileObj, "[%s] [%s] [%s:%s:%d] %s\n", now, levelStr, fileName, funcName, fileNo, msg)
 		}
 	}
