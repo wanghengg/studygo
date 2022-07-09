@@ -63,8 +63,10 @@ func (l *FileLogger) log(msg string, lv LogLevel) {
 		case FATAL:
 			levelStr = "FATAL"
 		}
-
-		fmt.Printf("[%s] [%s] [%s:%s:%d] %s\n", now, levelStr, fileName, funcName, fileNo, msg)
+		fmt.Fprintf(l.fileObj, "[%s] [%s] [%s:%s:%d] %s\n", now, levelStr, fileName, funcName, fileNo, msg)
+		if lv >= ERROR {
+			fmt.Fprintf(l.errFileObj, "[%s] [%s] [%s:%s:%d] %s\n", now, levelStr, fileName, funcName, fileNo, msg)
+		}
 	}
 }
 
@@ -90,4 +92,9 @@ func (l *FileLogger) Error(msg string) {
 
 func (l *FileLogger) Fatal(msg string) {
 	l.log(msg, FATAL)
+}
+
+func (f *FileLogger) Close() {
+	f.fileObj.Close()
+	f.errFileObj.Close()
 }
