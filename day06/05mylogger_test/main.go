@@ -1,13 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/wanghengg/mylogger"
 )
 
 func main() {
-	log := mylogger.NewLog("Error")
+	// log := mylogger.NewLog("Error")
+	log, err := mylogger.NewFileLogger("warning", "./", "20220709.log", 10*1024*1024)
+	if err != nil {
+		fmt.Printf("NewFileLogger failed:%v", err)
+		return
+	}
 	for {
 		log.Debug("这是一条Debug日志")
 		log.Info("这是一条Info日志")
